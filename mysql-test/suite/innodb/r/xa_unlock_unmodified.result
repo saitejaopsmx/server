@@ -1,3 +1,6 @@
+SET @old_innodb_enable_xap_unlock_unmodified_for_primary_debug=
+@@GLOBAL.innodb_enable_xap_unlock_unmodified_for_primary_debug;
+SET GLOBAL innodb_enable_xap_unlock_unmodified_for_primary_debug= 1;
 SET @saved_dbug = @@GLOBAL.debug_dbug;
 CREATE TABLE `t`(`id` INT, PRIMARY KEY(`id`))
 ENGINE=InnoDB STATS_PERSISTENT=0;
@@ -63,3 +66,5 @@ SET DEBUG_SYNC="RESET";
 TRUNCATE TABLE t;
 SET @@GLOBAL.debug_dbug = @saved_dbug;
 DROP TABLE t;
+SET GLOBAL innodb_enable_xap_unlock_unmodified_for_primary_debug=
+@old_innodb_enable_xap_unlock_unmodified_for_primary_debug;

@@ -3,6 +3,10 @@
 --source include/have_debug.inc
 --source include/have_debug_sync.inc
 
+SET @old_innodb_enable_xap_unlock_unmodified_for_primary_debug=
+  @@GLOBAL.innodb_enable_xap_unlock_unmodified_for_primary_debug;
+SET GLOBAL innodb_enable_xap_unlock_unmodified_for_primary_debug= 1;
+
 SET @saved_dbug = @@GLOBAL.debug_dbug;
 
 CREATE TABLE `t`(`id` INT, PRIMARY KEY(`id`))
@@ -76,5 +80,8 @@ while ($i) {
 
 SET @@GLOBAL.debug_dbug = @saved_dbug;
 DROP TABLE t;
+
+SET GLOBAL innodb_enable_xap_unlock_unmodified_for_primary_debug=
+  @old_innodb_enable_xap_unlock_unmodified_for_primary_debug;
 
 --source include/wait_until_count_sessions.inc
