@@ -428,6 +428,9 @@ extern ulint	srv_log_writes_and_flush;
 extern my_bool	innodb_evict_tables_on_commit_debug;
 extern my_bool	srv_purge_view_update_only_debug;
 
+/** Enable unmodified records unlocking on XA PREPARE for master. */
+extern my_bool innodb_enable_xap_unlock_unmodified_for_primary_debug;
+
 /** InnoDB system tablespace to set during recovery */
 extern uint	srv_sys_space_size_debug;
 /** whether redo log file has been created at startup */

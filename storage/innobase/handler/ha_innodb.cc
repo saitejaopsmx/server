@@ -200,6 +200,7 @@ extern uint srv_n_fil_crypt_iops;
 
 #ifdef UNIV_DEBUG
 my_bool innodb_evict_tables_on_commit_debug;
+my_bool innodb_enable_xap_unlock_unmodified_for_primary_debug;
 #endif
 
 /** File format constraint for ALTER TABLE */
@@ -19705,6 +19706,11 @@ static MYSQL_SYSVAR_BOOL(evict_tables_on_commit_debug,
   "On transaction commit, try to evict tables from the data dictionary cache.",
   NULL, NULL, FALSE);
 
+static MYSQL_SYSVAR_BOOL(enable_xap_unlock_unmodified_for_primary_debug,
+  innodb_enable_xap_unlock_unmodified_for_primary_debug, PLUGIN_VAR_NOCMDARG,
+  "Unlock unmodified records on XA PREPARE for primary.",
+  NULL, NULL, FALSE);
+
 static MYSQL_SYSVAR_UINT(data_file_size_debug,
   srv_sys_space_size_debug,
   PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
@@ -19955,6 +19961,7 @@ static struct st_mysql_sys_var* innobase_system_variables[]= {
   MYSQL_SYSVAR(limit_optimistic_insert_debug),
   MYSQL_SYSVAR(trx_purge_view_update_only_debug),
   MYSQL_SYSVAR(evict_tables_on_commit_debug),
+  MYSQL_SYSVAR(enable_xap_unlock_unmodified_for_primary_debug),
   MYSQL_SYSVAR(data_file_size_debug),
   MYSQL_SYSVAR(fil_make_page_dirty_debug),
   MYSQL_SYSVAR(saved_page_number_debug),

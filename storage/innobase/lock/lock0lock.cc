@@ -66,6 +66,7 @@ extern "C" void thd_rpl_deadlock_check(MYSQL_THD thd, MYSQL_THD other_thd);
 extern "C" int thd_need_wait_reports(const MYSQL_THD thd);
 extern "C" int thd_need_ordering_with(const MYSQL_THD thd, const MYSQL_THD other_thd);
 extern "C" int thd_deadlock_victim_preference(const MYSQL_THD thd1, const MYSQL_THD thd2);
+extern "C" bool thd_is_slave(const MYSQL_THD thd);
 #endif
 
 /** Functor for accessing the embedded node within a table lock. */
@@ -4597,7 +4598,14 @@ reiterate:
           lock_rec_unlock(*cell, lock, PAGE_HEAP_NO_SUPREMUM);
           latch->release();
         }
-        else
+        else if (false
+#ifdef HAVE_REPLICATION
+                 || thd_is_slave(trx->mysql_thd)
+#endif /* HAVE_REPLICATION */
+#ifdef UNIV_DEBUG
+                 || innodb_enable_xap_unlock_unmodified_for_primary_debug
+#endif /* UNIV_DEBUG */
+        )
         {
           ulint set_nth_bit_calls= trx->lock.set_nth_bit_calls;
           latch->release();
@@ -4743,7 +4751,14 @@ reiterate:
             lock->un_member.rec_lock.page_id.fold());
         if (lock_rec_get_nth_bit(lock, PAGE_HEAP_NO_SUPREMUM))
           lock_rec_unlock(*cell, lock, PAGE_HEAP_NO_SUPREMUM);
-        else
+        else if (false
+#ifdef HAVE_REPLICATION
+                 || thd_is_slave(trx->mysql_thd)
+#endif /* HAVE_REPLICATION */
+#ifdef UNIV_DEBUG
+                 || innodb_enable_xap_unlock_unmodified_for_primary_debug
+#endif /* UNIV_DEBUG */
+        )
         {
           ut_ad(lock->trx->isolation_level > TRX_ISO_READ_COMMITTED ||
                 /* Insert-intention lock is valid for supremum for isolation
