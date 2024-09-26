@@ -179,8 +179,10 @@ static double perpendicular_distance(const st_point_2d& point,
   double point_vector_dot_product= ((difference_x * point_vector_x) +
                                    (difference_y * point_vector_y));
 
-  double adjusted_x= point_vector_x - (point_vector_dot_product * difference_x);
-  double adjusted_y= point_vector_y - (point_vector_dot_product * difference_y);
+  double adjusted_x= point_vector_dot_product * difference_x;
+  adjusted_x= point_vector_x - adjusted_x;
+  double adjusted_y= point_vector_dot_product * difference_y;
+  adjusted_y= point_vector_y - adjusted_y;
 
   return sqrt((adjusted_x * adjusted_x) + (adjusted_y * adjusted_y));
 }
