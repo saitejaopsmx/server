@@ -1135,6 +1135,10 @@ int mhnsw_insert(TABLE *table, KEY *keyinfo)
   if (ctx->byte_len != res->length())
     return bad_value_on_insert(vec_field);
 
+  MEM_ROOT_SAVEPOINT memroot_sv;
+  root_make_savepoint(thd->mem_root, &memroot_sv);
+  SCOPE_EXIT([memroot_sv](){ root_free_to_savepoint(&memroot_sv); });
+
   const size_t max_found= ctx->max_neighbors(0);
   Neighborhood candidates, start_nodes;
   candidates.init(thd->alloc<FVectorNode*>(max_found + 7), max_found);
