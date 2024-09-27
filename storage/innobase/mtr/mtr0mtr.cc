@@ -1187,7 +1187,7 @@ std::pair<lsn_t,mtr_t::page_flush_ahead> mtr_t::do_write()
     log_sys.latch.rd_lock(SRW_LOCK_CALL);
 
   if (UNIV_UNLIKELY(m_user_space && !m_user_space->max_lsn &&
-                    !is_predefined_tablespace(m_user_space->id)))
+                    !srv_is_undo_tablespace((m_user_space->id))))
   {
     if (!m_latch_ex)
     {
