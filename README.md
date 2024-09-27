@@ -1,69 +1,138 @@
-# Code status:
 
-* [![Appveyor CI status](https://ci.appveyor.com/api/projects/status/4u6pexmtpuf8jq66?svg=true)](https://ci.appveyor.com/project/rasmushoj/server) ci.appveyor.com
 
-## MariaDB: The innovative open source database
+![Sample image of  nodes with data](./nodes.png)
 
-MariaDB was designed as a drop-in replacement of MySQL(R) with more
-features, new storage engines, fewer bugs, and better performance.
+# Docker Swarm Visualizer
+*** note ***
+_This only works with Docker Swarm Mode in Docker Engine 1.12.0 and later. It does not work with the separate Docker Swarm project_
+> Also this is a sample app meant for learning Docker. Running this app in production is insecure and should be avoided. If you want to run it in production you must take all security precautions, and in particular [Protect the Docker daemon socket](https://docs.docker.com/engine/security/https/) with SSL.
 
-MariaDB is brought to you by the MariaDB Foundation and the MariaDB Corporation.
-Please read the CREDITS file for details about the MariaDB Foundation,
-and who is developing MariaDB.
+This project was originally created by [Francisco Miranda](https://github.com/maroshii) for the 2015 DockerCon EU keynote. It was adapted to be used for the 2016 DockerCon US keynote showcasing [Docker swarm mode](https://docs.docker.com/engine/swarm/). Since then the community has generously contributed many updates. Thanks to all the contributors, and a special thanks to [@DovAmir](https://github.com/DovAmir) and [@alexellis](https://github.com/alexellis) for their big contributions.
 
-MariaDB is developed by many of the original developers of MySQL who
-now work for the MariaDB Corporation, the MariaDB Foundation and by
-many people in the community.
+Demo container that displays Docker services running on a Docker Swarm in a diagram.
 
-MySQL, which is the base of MariaDB, is a product and trademark of Oracle
-Corporation, Inc. For a list of developers and other contributors,
-see the Credits appendix.  You can also run 'SHOW authors' to get a
-list of active contributors.
+This works only with [Docker swarm mode](https://docs.docker.com/engine/swarm/) which was introduced in Docker 1.12. These instructions presume you are running on the master node and you already have a Swarm running.
 
-A description of the MariaDB project and a manual can be found at:
+Each node in the swarm will show all tasks running on it. When a service goes down it'll be removed. When a node goes down it won't, instead the circle at the top will turn red to indicate it went down. Tasks will be removed.
+Occasionally the Remote API will return incomplete data, for instance the node can be missing a name. The next time info for that node is pulled, the name will update.
 
-https://mariadb.org
+To run:
 
-https://mariadb.com/kb/en/
+```
+$ docker run -it -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+```
 
-https://mariadb.com/kb/en/mariadb-vs-mysql-features/
+If port 8080 is already in use on your host, you can specify e.g. `-p [YOURPORT]:8080` instead. Example:
 
-https://mariadb.com/kb/en/mariadb-versus-mysql-compatibility/
+```
+$ docker run -it -d -p 5000:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+```
 
-https://mariadb.com/kb/en/new-and-old-releases/
+To run with a different context root (useful when running behind an external load balancer):
 
-# Getting the code, building it and testing it
+```bash
+$ docker run -it -d -e CTX_ROOT=/visualizer -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+```
 
-Refer to the following guide: https://mariadb.org/get-involved/getting-started-for-developers/get-code-build-test/
-which outlines how to build the source code correctly and run the MariaDB testing framework,
-as well as which branch to target for your contributions.
+To run in a docker swarm:
 
-# Help
+```
+$ docker service create \
+  --name=viz \
+  --publish=8080:8080/tcp \
+  --constraint=node.role==manager \
+  --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+  dockersamples/visualizer
+```
 
-More help is available from the Maria Discuss mailing list
-https://lists.mariadb.org/postorius/lists/discuss.lists.mariadb.org/ and MariaDB's Zulip
-instance, https://mariadb.zulipchat.com/
+## Supported architectures
 
-# Licensing
+The main `dockersamples/visualizer` image supports **linux/amd64**.
 
-***************************************************************************
+**For armhf**, there is a pre-built image available. See [Running on ARM](#running-on-arm).
 
-MariaDB is specifically available only under version 2 of the GNU
-General Public License (GPLv2). (I.e. Without the "any later version"
-clause.) This is inherited from MySQL. Please see the README file in
-the MySQL distribution for more information.
+**For Windows**, there is a separate `Dockerfile.windows` and image. See [Running on Windows](#running-on-windows).
 
-License information can be found in the COPYING file. Third party
-license information can be found in the THIRDPARTY file.
+**Missing your architecture?** See [Building a custom image](#building-a-custom-image).
 
-***************************************************************************
+## Running on ARM
 
-# Bug Reports
+[@alexellisuk](https://twitter.com/alexellisuk) has pushed an image to the Docker Hub as `alexellis2/visualizer-arm:latest` it will run the code on an ARMv6 or ARMv7 device such as the Raspberry Pi.
 
-Bug and/or error reports regarding MariaDB should be submitted at:
-https://jira.mariadb.org
+```
+$ docker service create \
+  --name=viz \
+  --publish=8080:8080/tcp \
+  --constraint=node.role==manager \
+  --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+  alexellis2/visualizer-arm:latest
+```
 
-For reporting security vulnerabilities, see our [security-policy](https://mariadb.org/about/security-policy/).
+* Update/rebuild the image:
 
-The code for MariaDB, including all revision history, can be found at:
-https://github.com/MariaDB/server
+If you would like to build the image from source run the following command:
+
+```
+$ docker build -t visualizer-arm:latest .
+```
+
+> Make sure you do this on a Raspberry Pi directly.
+
+[View on Docker Hub](https://hub.docker.com/r/alexellis2/visualizer-arm/tags/)
+
+## Running on Windows
+
+[@StefanScherer](https://github.com/StefanScherer) has pushed an image to the
+Docker Hub as `stefanscherer/visualizer-windows:latest` it will run the code
+in a Windows nanoserver container.
+
+If you would like to build the image from source run the following command:
+
+```
+$ docker build -f Dockerfile.windows -t visualizer-windows:latest .
+```
+
+On Windows you cannot use `-v` to bind mount the named pipe into the container.
+Your Docker engine has to listen to a TCP port, eg. 2375 and you have to
+set the `DOCKER_HOST` environment variable running the container.
+
+```
+$ip=(Get-NetIPAddress -AddressFamily IPv4 `
+   | Where-Object -FilterScript { $_.InterfaceAlias -Eq "vEthernet (HNS Internal NIC)" } `
+   ).IPAddress
+
+docker run -d -p 8080:8080 -e DOCKER_HOST=${ip}:2375 --name=visualizer stefanscherer/visualizer-windows
+```
+
+### Connect to a TLS secured Docker engine
+
+To work with a TLS secured Docker engine on Windows, set the environment variable `DOCKER_TLS_VERIFY` and
+bind mount the TLS certificates into the container.
+ 
+```
+$ip=(Get-NetIPAddress -AddressFamily IPv4 `
+   | Where-Object -FilterScript { $_.InterfaceAlias -Eq "vEthernet (HNS Internal NIC)" } `
+   ).IPAddress
+
+docker run -d -p 8080:8080 -e DOCKER_HOST=${ip}:2376 -e DOCKER_TLS_VERIFY=1 -v "$env:USERPROFILE\.docker:C:\Users\ContainerAdministrator\.docker" --name=visualizer stefanscherer/visualizer-windows
+```
+
+## Building a custom image
+*When building for Windows, see [Running on Windows](#running-on-windows)*.
+
+To build an up-to-date image for any architecture supported by [node:8-alpine](https://hub.docker.com/_/node/) (currently `amd64`, `arm32v6`, `arm32v7`, `arm64v8`, `i386`, `ppc64le` and `s390x`), execute the following command on a device of your target architecture:
+```
+$ docker build -t visualizer-custom:latest .
+```
+
+Afterwards you can start visualizer by using any of the commands stated [above](#docker-swarm-visualizer). Just replace `dockersamples/visualizer` with `visualizer-custom`. For example:
+```
+$ docker run -it -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock visualizer-custom
+```
+
+
+## TODO:
+* Take out or fix how dist works
+* Comment much more extensively
+* Create tests and make them work better
+* Make CSS more elastic. Currently optimized for 3 nodes on a big screen
